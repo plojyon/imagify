@@ -1,50 +1,46 @@
 # required python 3.8 or alter byte-writing condition
-input = input("name of imagified file:");
+input = input("name of imagified file (without .i.png):");
 output = input.split(".");
-output.pop();
 output[-2] += "_deimagified";
 output = ".".join(output);
 
 import math;
 from PIL import Image;
+import os;
 
 def bitstring2bytearr(s):
 	ba = bytearray();
 	print("output filesize: "+str(int(len(s)/8))+" bytes");
 	for i in range(0, len(s), 8):
-		if (i % 2000000 == 0): print("transforming "+str(int((i/int(len(s)))*100))+" % done");
 		sbyte = s[i:i+8];
 		ibyte = int(sbyte, 2);
 		ba.append(ibyte);
 	return ba;
 
-img = Image.open(input);
-size = img.size[0];
-print("image size: "+str(size)+"x"+str(size)+" pixels");
-bits = [];
-print("decoding ...");
-pixels = img.load(); # create the pixel map
-try:
-	for row in range(size):
-		if (row % 100 == 0): print("decoding "+str(int(100*row/size))+" % done");
-		for col in range(size):
+file_count = 0;
+while (os.path.isfile(input+'.'+str(file_count)+'.png')):
+	file_count += 1;
+if (file_count == 0):
+	print("No files detected. Aborted.");
+	exit();
+
+with open(output, "wb") as f:
+	for file in range(file_count):
+		img = Image.open(input+'.'+str(file)+'.png');
+		size = img.size[0];
+		print("image #"+str(file)+" size: "+str(size)+"x"+str(size)+" pixels");
+		bits = [];
+		pixels = img.load(); # create the pixel map
+		for px in range(size*size):
+			row = math.floor(px / size);
+			col = px % size;
 			if (pixels[col, row][0]-pixels[col, row][1] > 100): # hit red pixel
-				raise IndexError; # break out of nested for loop
+				break;
 			if (pixels[col, row][0] < 127):
 				bits.append("0");
 			else:
 				bits.append("1");
-except IndexError:
-	pass;
+		byte_array = bitstring2bytearr("".join(bits));
+		f.write(byte_array);
 
-print("done decoding");
-print("transforming ...");
-
-byte_array = bitstring2bytearr("".join(bits));
-
-print("done transforming");
-print("writing to disk ...");
-with open(output, "wb") as f:
-	f.write(byte_array);
-print("done writing");
-print("done.");
+f.close();

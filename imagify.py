@@ -1,48 +1,65 @@
 # required python 3.8 or alter byte-reading condition
-input = input("enter filename to imagify:"); #song.mp3
-output = input+".png";
-
 from PIL import Image;
 import math;
 import os;
 
-def tobits(s):
-	result = []
-	for c in s:
-		bits = bin(ord(c))[2:]
-		bits = '00000000'[len(bits):] + bits
-		result.extend([int(b) for b in bits])
-	return result
+def get_size(bits_left):
+	size = int(math.ceil(math.sqrt(bits_left)));
+	# ^ must be betwen 256 and 4 000 (16 MP limit)
+	if (size < 256):
+		size = 256;
+	elif (size > 4000):
+		size = 4000;
+	return size;
+	#if (size > 4000):
+		#print("pp too big");
+		#exit();
 
-# read file to bit string
-bits = [];
-with open(input, "rb") as f:
-	while (byte := f.read(1)):
-		bits.append(''.join(format(ord(byte), '08b')));
-bits = ''.join(bits);
-f.close()
+input_file = input("enter filename to imagify:"); #song.mp3
+filesize = os.path.getsize(input_file);
+print("filesize: "+str(filesize)+" B = "+str(filesize*8)+" b");
 
-filesize = os.path.getsize(input);
-size = int(math.ceil(math.sqrt(filesize*8)));
-# must be betwen 256 and 4 000 (16 MP limit)
-if (size < 256): size = 256;
-if (size > 4000):
-	print("pp too big");
+if (input("this will produce "+str(math.ceil(filesize / (2*(10**6))))+" images. Proceed? (y/n): ").upper() != "Y"):
+	print("Aborted.");
 	exit();
 
-img = Image.new('RGB', (size, size), color = 'red');
-pixels = img.load(); # create the pixel map
-try:
-	for row in range(size):
-		for col in range(size):
-			pos = col + row*size;
-			if (bits[pos] == "1"):
+# read file by byte
+with open(input_file, "rb") as f:
+	bytes_read = 0;
+	bits_read = 0;
+	row = 0;
+	col = 0;
+	img_index = 0;
+	size = get_size(filesize*8);
+	img = Image.new('RGB', (size, size), color = 'red');
+	pixels = img.load(); # create the pixel map
+	while (byte := f.read(1)):
+		bits = ''.join(format(ord(byte), '08b'));
+		for b in range(8):
+			if (bits[b] == "1"):
 				color = (255,255,255);
 			else:
 				color = (0,0,0);
 			pixels[col, row] = color;
-except IndexError:
-	pass;
 
-print("saving image..");
-img.save(output);
+			bits_read += 1;
+			col += 1;
+			col %= size;
+			if (col == 0): row += 1;
+			row %= size;
+			if ((row == 0 and col == 0) or bits_read == filesize*8):
+				print("saving an image at "+str(bits_read)+" bits done ...");
+				img.save(input_file+"."+str(img_index)+".png");
+				size = get_size(filesize*8 - bits_read);
+				print("next size: "+str(size));
+				img = Image.new('RGB', (size, size), color = 'red');
+				pixels = img.load(); # create the pixel map
+
+				img_index += 1;
+				row = 0;
+				col = 0;
+		bytes_read += 1;
+
+f.close();
+
+print("all done!");
