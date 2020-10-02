@@ -34,6 +34,7 @@ with open(input_file, "rb") as f:
 	img = Image.new('RGB', (size, size), color = 'red');
 	pixels = img.load(); # create the pixel map
 	while (byte := f.read(1)):
+		if (bytes_read % 100000 == 0): print(str(int(100*bytes_read / filesize))+" % done");
 		bits = ''.join(format(ord(byte), '08b'));
 		for b in range(8):
 			if (bits[b] == "1"):
@@ -48,10 +49,9 @@ with open(input_file, "rb") as f:
 			if (col == 0): row += 1;
 			row %= size;
 			if ((row == 0 and col == 0) or bits_read == filesize*8):
-				print("saving an image at "+str(bits_read)+" bits done ...");
+				print("saving image "+str(img_index)+"/"+str(file_count)+" ...");
 				img.save(input_file+"."+str(img_index)+".png");
 				size = get_size(filesize*8 - bits_read);
-				print("next size: "+str(size));
 				img = Image.new('RGB', (size, size), color = 'red');
 				pixels = img.load(); # create the pixel map
 
@@ -63,3 +63,4 @@ with open(input_file, "rb") as f:
 f.close();
 
 print("all done!");
+print("Thank you for using imagify");

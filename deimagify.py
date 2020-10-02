@@ -1,7 +1,6 @@
 # required python 3.8 or alter byte-writing condition
 input = input("name of imagified file (without .i.png):");
 output = input.split(".");
-output[-2] += "_deimagified";
 output = ".".join(output);
 
 import math;
@@ -10,7 +9,6 @@ import os;
 
 def bitstring2bytearr(s):
 	ba = bytearray();
-	print("output filesize: "+str(int(len(s)/8))+" bytes");
 	for i in range(0, len(s), 8):
 		sbyte = s[i:i+8];
 		ibyte = int(sbyte, 2);
@@ -28,10 +26,12 @@ with open(output, "wb") as f:
 	for file in range(file_count):
 		img = Image.open(input+'.'+str(file)+'.png');
 		size = img.size[0];
-		print("image #"+str(file)+" size: "+str(size)+"x"+str(size)+" pixels");
+		print("processing image "+str(file+1)+"/"+str(file_count)+" ...");
 		bits = [];
 		pixels = img.load(); # create the pixel map
-		for px in range(size*size):
+		size2 = size*size
+		for px in range(size2):
+			if (px % 500000 == 0): print(str(int(100*px/size2))+" % done");
 			row = math.floor(px / size);
 			col = px % size;
 			if (pixels[col, row][0]-pixels[col, row][1] > 100): # hit red pixel
@@ -44,3 +44,6 @@ with open(output, "wb") as f:
 		f.write(byte_array);
 
 f.close();
+
+print("all done!");
+print("Thank you for using imagify");
