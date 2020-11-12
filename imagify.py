@@ -19,7 +19,8 @@ input_file = input("enter filename to imagify:"); #song.mp3
 filesize = os.path.getsize(input_file);
 print("filesize: "+str(filesize)+" B = "+str(filesize*8)+" b");
 
-if (input("this will produce "+str(math.ceil(filesize / (2*(10**6))))+" images. Proceed? (y/n): ").upper() != "Y"):
+file_count = math.ceil(filesize / (2*(10**6)));
+if (input("this will produce "+str(file_count)+" images. Proceed? (y/n): ").upper() != "Y"):
 	print("Aborted.");
 	exit();
 
@@ -49,7 +50,7 @@ with open(input_file, "rb") as f:
 			if (col == 0): row += 1;
 			row %= size;
 			if ((row == 0 and col == 0) or bits_read == filesize*8):
-				print("saving image "+str(img_index)+"/"+str(file_count)+" ...");
+				print("saving image #"+str(img_index)+" ("+str(img_index+1)+"/"+str(file_count)+") ...");
 				img.save(input_file+"."+str(img_index)+".png");
 				size = get_size(filesize*8 - bits_read);
 				img = Image.new('RGB', (size, size), color = 'red');
